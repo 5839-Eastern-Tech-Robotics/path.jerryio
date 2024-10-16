@@ -192,19 +192,19 @@ test("validate Segment", async () => {
   expect(s.speed).toHaveLength(0);
   expect(s.lookahead).toHaveLength(0);
 
-  expect(await validate(s)).toHaveLength(0);
+  expect(await validate(s)).toHaveLength(0); //// validates s (errors should have len 0)
 
-  const p = instanceToPlain(s);
-  s.controls.forEach(c => expect((c as any).__type).toBeDefined());
-  expect(await validate(s)).toHaveLength(0);
-  s.controls.forEach(c => expect(delete (c as any).__type));
-  const s2 = plainToClass(Segment, p, { excludeExtraneousValues: true, exposeDefaultValues: true });
+  const p = instanceToPlain(s); //// Segment s to plain p
+  s.controls.forEach(c => expect((c as any).__type).toBeDefined()); //// __type exists for each thing in s.controls
+  expect(await validate(s)).toHaveLength(0); //// validates s (errors should have len 0)
+  s.controls.forEach(c => expect(delete (c as any).__type)); //// delete __type for each thing in s.controls
+  const s2 = plainToClass(Segment, p, { excludeExtraneousValues: true, exposeDefaultValues: true }); //// Segment s to plain p to Segment s2
 
-  expect(await validate(s2)).toHaveLength(0);
-  expect(instanceToPlain(s2)).toStrictEqual(instanceToPlain(s));
+  expect(await validate(s2)).toHaveLength(0); //// validates s2 (errors should have len 0)
+  expect(instanceToPlain(s2)).toStrictEqual(instanceToPlain(s)); //// s === s2
 
-  (s as any).uid = "123456789-";
-  expect(await validate(s)).toHaveLength(1);
+  (s as any).uid = "123456789-"; //// s's uid property set to "123456789-"
+  expect(await validate(s)).toHaveLength(1); //// validates s (errors should now have len 1 presumably because of the random uid property)
 
   (s as any).uid = "";
   (s as any).controls = controls[0];
