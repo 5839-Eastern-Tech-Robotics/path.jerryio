@@ -280,7 +280,7 @@ export interface KeyframePos {
   yPos: number; // [0...1]
 }
 
-export abstract class Keyframe implements CanvasEntity {
+export abstract class Keyframe implements CanvasEntity { //// abstract class is a base class that cannot be called on its own, only its children can be
   @Matches(/^[a-zA-Z0-9]+$/)
   @MinLength(10)
   @Expose()
@@ -305,7 +305,19 @@ export abstract class Keyframe implements CanvasEntity {
     });
   }
 
-  abstract process(pc: PathConfig, responsible: Point[], nextFrame?: Keyframe): void;
+  abstract process(pc: PathConfig, responsible: Point[], nextFrame?: Keyframe): void; //// abstract method - filled in by each child
+  /*//
+  export interface ConfigSection {
+    get format(): Format;
+  }
+  export interface PathConfig extends ConfigSection {
+    path: Path;
+    lookaheadLimit?: NumberRange;
+    speedLimit: EditableNumberRange;
+    bentRateApplicableRange: EditableNumberRange;
+    bentRateApplicationDirection: BentRateApplicationDirection;
+  }
+  //*/
 }
 
 // observable class
@@ -319,14 +331,14 @@ export class SpeedKeyframe extends Keyframe implements CanvasEntity {
     yPos: number, // [0...1]
     followBentRate: boolean = false
   ) {
-    super(xPos, yPos);
+    super(xPos, yPos); //// super calls constructor of parent class (KeyFrame in this case)
     this.followBentRate = followBentRate;
     makeObservable(this, {
       followBentRate: observable
     });
   }
 
-  process(pc: PathConfig, responsible: Point[], nextFrame?: SpeedKeyframe): void {
+  process(pc: PathConfig, responsible: Point[], nextFrame?: SpeedKeyframe): void { //// WHERE STUFF ACTUALLY HAPPENS
     const limitFrom = pc.speedLimit.from;
     const limitTo = pc.speedLimit.to;
     const limitDiff = limitTo - limitFrom;
@@ -368,7 +380,7 @@ export class LookaheadKeyframe extends Keyframe implements CanvasEntity {
     makeObservable(this, {});
   }
 
-  process(pc: PathConfig, responsible: Point[], nextFrame?: LookaheadKeyframe): void {
+  process(pc: PathConfig, responsible: Point[], nextFrame?: LookaheadKeyframe): void { //// WHERE STUFF ACTUALLY HAPPENS
     if (pc.lookaheadLimit === undefined) return;
     const limitFrom = pc.lookaheadLimit.from;
     const limitTo = pc.lookaheadLimit.to;
