@@ -509,7 +509,7 @@ export class AddLinearSegment implements CancellableCommand, AddPathTreeItemsCom
   }
 }
 
-export class ConvertSegment implements CancellableCommand, AddPathTreeItemsCommand, RemovePathTreeItemsCommand {
+export class ConvertSegment implements CancellableCommand, AddPathTreeItemsCommand, RemovePathTreeItemsCommand { //// WHERE STUFF ACTUALLY HAPPENS
   protected previousControls: SegmentControls | undefined;
   protected newControls: SegmentControls | undefined;
   public variant: SegmentVariant;
