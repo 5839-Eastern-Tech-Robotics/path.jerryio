@@ -447,14 +447,14 @@ export class KeyframeList<T extends Keyframe> {
   }
 }
 
-export enum SegmentVariant {
+export enum SegmentVariant { //// how do I generalize this?????
   Linear = "linear",
   Cubic = "cubic"
 }
 
-export type LinearSegmentControls = [EndControl, EndControl];
+export type LinearSegmentControls = [EndControl, EndControl]; 
 export type CubicSegmentControls = [EndControl, Control, Control, EndControl];
-export type SegmentControls = LinearSegmentControls | CubicSegmentControls;
+export type SegmentControls = LinearSegmentControls | CubicSegmentControls; //// how do I generalize this?????
 
 export type SegmentKeyframeKey = "speed" | "lookahead";
 export type SegmentKeyframeKeyMap = { speed: SpeedKeyframe; lookahead: LookaheadKeyframe };
@@ -498,7 +498,7 @@ export class Segment implements CanvasEntity {
   constructor(); // For class-transformer
   constructor(first: EndControl, last: EndControl);
   constructor(first: EndControl, idx1: Control, idx2: Control, last: EndControl);
-  constructor(...list: [] | SegmentControls) {
+  constructor(...list: [] | SegmentControls) { //// this already accepts generalized lists of controls for the constructure :fire:
     this.controls = list as SegmentControls;
     this.uid = makeId(10);
     makeAutoObservable(this);
@@ -527,8 +527,12 @@ export class Segment implements CanvasEntity {
   isLinear(): this is Segment & { controls: LinearSegmentControls } {
     return this.controls.length === 2;
   }
-
-  getVariant(): SegmentVariant {
+  /*//
+  degree(): this is Segment & { controls: SegmentControls } {
+    return this.controls.length-1;
+  }
+  //*/
+  getVariant(): SegmentVariant { //// deprecate
     return this.isCubic() ? SegmentVariant.Cubic : SegmentVariant.Linear;
   }
 
