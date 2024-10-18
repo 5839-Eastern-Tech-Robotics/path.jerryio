@@ -426,7 +426,65 @@ export class UpdatePathTreeItems
     return this.targets.slice();
   }
 }
+/*//
+export class AddSegment implements CancellableCommand, AddPathTreeItemsCommand {
+  protected added: PathTreeItem[] = [];
 
+  protected _segment: Segment | undefined;
+
+  constructor(public path: Path, public end: EndControl, public degree: number) {}
+
+  execute(): void {
+    d = this.degree;
+    const p[]: AnyControl[] = [];
+
+    if (this.path.segments.length === 0) {
+      p.push(new EndControl(0, 0, 0));
+      for (let i = 1; i < d; i++) {
+        p.push(this.end.multiply(new Control(i/d, i/d)));
+      }
+      p.push(this.end);
+
+      this._segment = new Segment(...p);
+      this.added.push(...p);
+    } else {
+      const last = this.path.segments[this.path.segments.length - 1];
+      const c = last.controls[-2];
+      p.push(last);
+      p.push(last.mirror(new Control(c.x, c.y)));
+      const diff = this.end.subtract(last);
+      for (let i = 1; i < d-1; i++) {
+        p.push(last + diff.multiply(new Control(i/(d-1), i/(d-1))));
+      }
+      p.push(this.end);
+
+      this._segment = new Segment(...p);
+      this.added.push(...p.slice(1));
+    }
+    this.path.segments.push(this._segment);
+  }
+
+  undo(): void {
+    this.path.segments.pop();
+  }
+
+  redo(): void {
+    this.path.segments.push(this._segment!);
+  }
+
+  get addedItems(): readonly PathTreeItem[] {
+    return this.added;
+  }
+
+  get segment() {
+    return this._segment;
+  }
+
+  get degree() {
+    return this.degree;
+  }
+}
+//*/
 export class AddCubicSegment implements CancellableCommand, AddPathTreeItemsCommand {
   protected added: PathTreeItem[] = [];
 
