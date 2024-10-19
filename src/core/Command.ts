@@ -573,7 +573,7 @@ export class ConvertSegment implements CancellableCommand, AddPathTreeItemsComma
   public variant: SegmentVariant;
 
   constructor(public path: Path, public segment: Segment) {
-    this.variant = segment.isCubic() ? SegmentVariant.Linear : SegmentVariant.Cubic;
+    this.variant = segment.isCubic() ? SegmentVariant.Cubic : (segment.isLinear() ? SegmentVariant.Linear : SegmentVariant.Quintic);
   }
 
   protected convertToLine(): void {
@@ -610,12 +610,47 @@ export class ConvertSegment implements CancellableCommand, AddPathTreeItemsComma
     this.segment.controls = [p0, p1, p2, p3];
   }
 
+  protected convertToQuintic(): void {
+    const index = this.path.segments.indexOf(this.segment);
+    const found = index !== -1;
+    if (!found) return;
+
+    const prev: Segment | undefined = this.path.segments[index - 1];
+    const next: Segment | undefined = this.path.segments[index + 1];
+
+    const p0 = this.segment.first;
+    const p5 = this.segment.last;
+
+    let temp: Vector;
+
+    if (prev !== undefined) {
+      temp = p0.mirror(prev.controls[prev.controls.length - 2].toVector());
+    } else {
+      temp = p0.add(p5.toVector()).divide(2);
+    }
+    const p1 = new Control(temp.x, temp.y);
+
+    if (next !== undefined) {
+      temp = p5.mirror(next.controls[1].toVector());
+    } else {
+      temp = p0.add(p5.toVector()).divide(2);
+    }
+    const p4 = new Control(temp.x, temp.y);
+
+    const p2 = p0.add(p0.toVector()).add(p5.toVector()).divide(3);
+    const p3 = p0.add(p5.toVector()).add(p5.toVector()).divide(3);
+
+    this.segment.controls = [p0, p1, p2, p3, p4, p5];
+  }
+
   execute(): void {
     this.previousControls = [...this.segment.controls];
     if (this.variant === SegmentVariant.Linear) {
       this.convertToLine();
     } else if (this.variant === SegmentVariant.Cubic) {
       this.convertToCubic();
+    } else if (this.variant === SegmentVarient.Quintic) {
+      this.convertToQuintic();
     }
     this.newControls = [...this.segment.controls];
   }
@@ -663,7 +698,7 @@ export class SplitSegment implements CancellableCommand, AddPathTreeItemsCommand
       this.path.segments.splice(index + 1, 0, this._newSegment);
 
       this.added = [this.point];
-    } else {
+    } else if (cp_count === 4) {
       const p0 = this.originalSegment.controls[0] as EndControl;
       const p1 = this.originalSegment.controls[1];
       const p2 = this.originalSegment.controls[2];
@@ -677,6 +712,22 @@ export class SplitSegment implements CancellableCommand, AddPathTreeItemsCommand
       this.path.segments.splice(index + 1, 0, this._newSegment);
 
       this.added = [a, this.point, c];
+    } else {
+      const p0 = this.originalSegment.controls[0] as EndControl;
+      const p1 = this.originalSegment.controls[1];
+      const p2 = this.originalSegment.controls[2];
+      const p3 = this.originalSegment.controls[3];
+      const p4 = this.originalSegment.controls[4];
+      const p5 = this.originalSegment.controls[5] as EndControl;
+
+      const a1 = p2.add(p2).add(this.point).divide(new Control(3, 3));
+      const a2 = p2.add(this.point).add(this.point).divide(new Control(3, 3));
+      const b = this.point;
+      const c1 = this.point.add(this.point).add(p3).divide(new Control(3, 3));
+      const c2 = this.point.add(p3).add(p3).divide(new Control(3, 3));
+      this.originalSegment.controls = [p0, p1, p2, a1, a2, b];
+      this._newSegment = new Segment(b, c1, c2, p3, p4, p5);
+      this.path.segments.splice(index + 1, 0, this._newSegment);
     }
 
     this.newOriginalSegmentControls = [...this.originalSegment.controls];
