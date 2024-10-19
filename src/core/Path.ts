@@ -447,14 +447,16 @@ export class KeyframeList<T extends Keyframe> {
   }
 }
 
-export enum SegmentVariant { //// how do I generalize this?????
+export enum SegmentVariant {
   Linear = "linear",
-  Cubic = "cubic"
+  Cubic = "cubic",
+  Quintic = "quintic"
 }
 
 export type LinearSegmentControls = [EndControl, EndControl]; 
 export type CubicSegmentControls = [EndControl, Control, Control, EndControl];
-export type SegmentControls = LinearSegmentControls | CubicSegmentControls; //// how do I generalize this?????
+export type QuinticSegmentControls = [EndControl, Control, Control, Control, Control, EndControl];
+export type SegmentControls = LinearSegmentControls | CubicSegmentControls | QuinticSegmentControls;
 
 export type SegmentKeyframeKey = "speed" | "lookahead";
 export type SegmentKeyframeKeyMap = { speed: SpeedKeyframe; lookahead: LookaheadKeyframe };
@@ -498,7 +500,8 @@ export class Segment implements CanvasEntity {
   constructor(); // For class-transformer
   constructor(first: EndControl, last: EndControl);
   constructor(first: EndControl, idx1: Control, idx2: Control, last: EndControl);
-  constructor(...list: [] | SegmentControls) { //// this already accepts generalized lists of controls for the constructure :fire:
+  constructor(first: EndControl, idx1: Control, idx2: Control, idx3: Control, idx4: Control, last: EndControl);
+  constructor(...list: [] | SegmentControls) { //// this already accepts generalized lists of controls for the constructor :fire:
     this.controls = list as SegmentControls;
     this.uid = makeId(10);
     makeAutoObservable(this);
@@ -520,6 +523,10 @@ export class Segment implements CanvasEntity {
     this.controls[this.controls.length - 1] = point;
   }
 
+  isQuintic(): this is Segment & { controls: QuinticSegmentControls } {
+    return this.controls.length === 6;
+  }
+  
   isCubic(): this is Segment & { controls: CubicSegmentControls } {
     return this.controls.length === 4;
   }
@@ -527,13 +534,9 @@ export class Segment implements CanvasEntity {
   isLinear(): this is Segment & { controls: LinearSegmentControls } {
     return this.controls.length === 2;
   }
-  /*//
-  degree(): this is Segment & { controls: SegmentControls } {
-    return this.controls.length-1;
-  }
-  //*/
-  getVariant(): SegmentVariant { //// deprecate
-    return this.isCubic() ? SegmentVariant.Cubic : SegmentVariant.Linear;
+
+  getVariant(): SegmentVariant {
+    return this.isCubic() ? SegmentVariant.Cubic : (this.isLinear() ? SegmentVariant.Linear : SegmentVariant.Quintic);
   }
 
   isLocked(): boolean {
@@ -737,8 +740,8 @@ export function ValidateSegmentControls(validationOptions?: ValidationOptions) {
         validate(array: any, args: ValidationArguments) {
           // check if it is an array, redundant
           if (!(array instanceof Array)) return false;
-          // check if the length is 2 or 4
-          if (!(array.length === 2 || array.length === 4)) return false;
+          // check if the length is 2 or 4 //// or 6
+          if (!(array.length === 2 || array.length === 4 || array.length === 6)) return false;
           // check if it is an array of EndControl | Control, redundant
           if (!array.every(item => item instanceof Control || item instanceof EndControl)) return false;
           // check if the first is EndControl
@@ -746,7 +749,7 @@ export function ValidateSegmentControls(validationOptions?: ValidationOptions) {
           // check if the last is EndControl
           if (!(array[array.length - 1] instanceof EndControl)) return false;
           // check if the middle is Control
-          if (array.length === 4 && array.slice(1, -1).some(item => item instanceof EndControl)) return false;
+          if ((array.length === 4 || array.length === 6) && array.slice(1, -1).some(item => item instanceof EndControl)) return false;
 
           return true;
         },
