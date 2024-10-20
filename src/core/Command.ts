@@ -485,6 +485,57 @@ export class AddSegment implements CancellableCommand, AddPathTreeItemsCommand {
   }
 }
 //*/
+export class AddQuinticSegment implements CancellableCommand, AddPathTreeItemsCommand {
+  protected added: PathTreeItem[] = [];
+
+  protected _segment: Segment | undefined;
+
+  constructor(public path: Path, public end: EndControl) {}
+
+  execute(): void {
+    const p5 = this.end;
+
+    if (this.path.segments.length === 0) {
+      const p0 = new EndControl(0, 0, 0);
+      const p1 = new Control(p0.x, p3.y);
+      const p2 = new p3.divide(3)
+      const p3 = p2.add(p2)
+      const p4 = new Control(p3.x, p0.y);
+      this._segment = new Segment(p0, p1, p2, p3, p4, p5);
+      this.added.push(p0, p1, p2, p3, p4, p5);
+    } else {
+      const last = this.path.segments[this.path.segments.length - 1];
+      const p0 = last.last;
+      const v = last.controls[-2].subtract(p0).multiply(last.controls.length - 1);
+      const a = last.controls.length === 2 ? new Control(0, 0) : p0.subtract(last.controls[-2]).subtract(last.controls[-2]).add(last.controls[-3]).multiply(last.controls.length === 3 ? 6 : 10)
+      const p1 = p0.add(v.divide(5))
+      const p2 = p1.add(p1).subtract(p0).add(a.divide(10))
+      const p3 = p0.add(p0).add(p5).divide(3);
+      const p4 = p0.add(p5).add(p5).divide(3);
+
+      this._segment = new Segment(p0, p1, p2, p3, p4, p5);
+      this.added.push(p1, p2, p3, p4, p5);
+    }
+    this.path.segments.push(this._segment);
+  }
+
+  undo(): void {
+    this.path.segments.pop();
+  }
+
+  redo(): void {
+    this.path.segments.push(this._segment!);
+  }
+
+  get addedItems(): readonly PathTreeItem[] {
+    return this.added;
+  }
+
+  get segment() {
+    return this._segment;
+  }
+}
+
 export class AddCubicSegment implements CancellableCommand, AddPathTreeItemsCommand {
   protected added: PathTreeItem[] = [];
 
@@ -504,9 +555,9 @@ export class AddCubicSegment implements CancellableCommand, AddPathTreeItemsComm
     } else {
       const last = this.path.segments[this.path.segments.length - 1];
       const p0 = last.last;
-      const c = last.controls.length === 2 ? last.controls[0] : last.controls[2];
-      const p1 = p0.mirror(new Control(c.x, c.y));
-      const p2 = p0.divide(new Control(2, 2)).add(p3.divide(new Control(2, 2)));
+      const v = last.controls[-2].subtract(p0).multiply(last.controls.length - 1);
+      const p1 = p0.add(v.divide(3));
+      const p2 = p0.add(p3).divide(2);
 
       this._segment = new Segment(p0, p1, p2, p3);
       this.added.push(p1, p2, p3);
