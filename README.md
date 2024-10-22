@@ -1,3 +1,9 @@
+# Changes (in progress)
+- quintic bezier spline
+- snapping for C1, G2, and C2 continuity
+
+# Original README
+
 <p align="center">
 	<a href="https://path.jerryio.com/"><img src="./public/static/logo464.svg" alt="IntroIcon" width="100"></a>
 </p>
