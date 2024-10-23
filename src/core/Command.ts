@@ -700,7 +700,7 @@ export class ConvertSegment implements CancellableCommand, AddPathTreeItemsComma
       this.convertToLine();
     } else if (this.variant === SegmentVariant.Cubic) {
       this.convertToCubic();
-    } else if (this.variant === SegmentVarient.Quintic) {
+    } else if (this.variant === SegmentVariant.Quintic) {
       this.convertToQuintic();
     }
     this.newControls = [...this.segment.controls];
@@ -722,6 +722,97 @@ export class ConvertSegment implements CancellableCommand, AddPathTreeItemsComma
   get removedItems(): readonly PathTreeItem[] {
     if (this.previousControls === undefined) return [];
     return this.variant === SegmentVariant.Linear ? this.previousControls!.slice(1, -1) : [];
+  }
+}
+
+export class LockC1 implements CancellableCommand { //// my C1 continuity locker
+  public variant: SegmentVariant;
+  public last: Segment
+
+  constructor(public path: Path, public segment: Segment) {
+    this.variant = segment.isQuintic() ? SegmentVariant.Quintic : (segment.isCubic() ? SegmentVariant.Cubic : (segment.isLinear() ? SegmentVariant.Linear : SegmentVariant.Quintic));
+    this.last = this.path.segments[index-1];
+  }
+
+  execute(): void {
+    const index = this.path.segments.indexOf(this.segment);
+    if (index === 0) return;
+    const p0 = segment.first;
+    this.previousControls = [[...this.last.controls],[...this.segment.controls]];
+    if (this.variant === SegmentVariant.Linear) { //// only linear segments can influence backwards, and can't influence other linears to prevent cascading
+      if (this.last.isLinear()) return;
+      const v = this.segment.last.subtract(this.segment.first);
+      this.last.controls[-2] = p0.subtract(v.divide(this.last.controls.length-1));
+      this.last.controls[-2].lock = true;
+    } else {
+      const v = p0.subtract(this.last.controls[-2]).multiply(this.last.controls.length-1);
+      this.segment.controls[1] = p0 + v.divide(this.segment.controls.length-1);
+      this.segment.controls[1].lock = true;
+    }
+    this.newControls = [[...this.last.controls],[...this.segment.controls]];
+  }
+
+  undo(): void {
+    this.segment.controls = [...this.previousControls[1]!];
+    this.last.controls = [...this.previousControls[0]!];
+  }
+
+  redo(): void {
+    this.segment.controls = [...this.newControls[1]!];
+    this.last.controls = [...this.newControls[0]!];
+  }
+}
+
+export class LockC2 implements CancellableCommand { //// my C2 continuity locker
+  public variant: SegmentVariant;
+  public last: Segment
+
+  constructor(public path: Path, public segment: Segment) {
+    this.variant = segment.isQuintic() ? SegmentVariant.Quintic : (segment.isCubic() ? SegmentVariant.Cubic : (segment.isLinear() ? SegmentVariant.Linear : SegmentVariant.Quintic));
+    this.last = this.path.segments[index-1];
+  }
+
+  execute(): void {
+    const index = this.path.segments.indexOf(this.segment);
+    if (index === 0) return;
+    const p0 = segment.first;
+    this.previousControls = [[...this.last.controls],[...this.segment.controls]];
+    if (this.variant === SegmentVariant.Linear) { //// only linear segments can influence backwards, and can't influence other linears to prevent cascading
+      if (this.last.isLinear()) return;
+      const v = this.segment.last.subtract(this.segment.first);
+      this.last.controls[-2] = p0.subtract(v.divide(this.last.controls.length-1));
+      this.last.controls[-2].lock = true;
+      pn1 = this.last.controls[-2];
+      this.last.controls[-3] = pn1.mirror(p0);
+      this.last.controls[-3].lock = true;
+    } else {
+      if (this.variant === SegmentVariant.Cubic && last.isCubic()) return; //// cubic segments can't influence other cubics to prevent cascading
+      //// the most cascading that could happen is linear/quintic -> cubic -> quintic
+      const v = p0.subtract(this.last.controls[-2]).multiply(this.last.controls.length-1);
+      this.segment.controls[1] = p0 + v.divide(this.segment.controls.length-1);
+      this.segment.controls[1].lock = true;
+      const p1 = this.segment.controls[1];
+      if (last.isLinear()) {
+        const a = new Control(0, 0);
+      } else {
+        const pn1 = last.controls[-2];
+        const pn2 = last.controls[-3];
+        const a = p0.subtract(pn1).subtract(pn1.subtract(pn2)).multiply(6 ? this.last.isCubic() : 10);
+      }
+      this.segment.controls[2] = a.divide(6 ? this.segment.isCubic() : 10).subtract(p0).add(p1).add(p1);
+      this.segment.controls[2].lock = true;
+    }
+    this.newControls = [[...this.last.controls],[...this.segment.controls]];
+  }
+
+  undo(): void {
+    this.segment.controls = [...this.previousControls[1]!];
+    this.last.controls = [...this.previousControls[0]!];
+  }
+
+  redo(): void {
+    this.segment.controls = [...this.newControls[1]!];
+    this.last.controls = [...this.newControls[0]!];
   }
 }
 
