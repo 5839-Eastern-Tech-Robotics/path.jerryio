@@ -497,23 +497,23 @@ export class AddQuinticSegment implements CancellableCommand, AddPathTreeItemsCo
 
     if (this.path.segments.length === 0) {
       const p0 = new EndControl(0, 0, 0);
-      const p1 = new Control(p0.x, p3.y);
-      const p2 = new p3.divide(3)
+      const p1 = new Control(p0.x, p5.y);
+      const p2 = new p5.divide(new Control(3, 3))
       const p3 = p2.add(p2)
-      const p4 = new Control(p3.x, p0.y);
+      const p4 = new Control(p5.x, p0.y);
       this._segment = new Segment(p0, p1, p2, p3, p4, p5);
       this.added.push(p0, p1, p2, p3, p4, p5);
     } else {
       const last = this.path.segments[this.path.segments.length - 1];
       const p0 = last.last;
-      const v = last.controls[-2].subtract(p0).multiply(last.controls.length - 1);
-      const a = last.controls.length === 2 ? new Control(0, 0) : p0.subtract(last.controls[-2]).subtract(last.controls[-2]).add(last.controls[-3]).multiply(last.controls.length === 3 ? 6 : 10)
-      const p1 = p0.add(v.divide(5))
-      const p2 = p1.add(p1).subtract(p0).add(a.divide(10))
-      const p3 = p0.add(p0).add(p5).divide(3);
-      const p4 = p0.add(p5).add(p5).divide(3);
+      const v = last.controls[last.controls.length - 2].subtract(p0).multiply(new Control(last.controls.length - 1, last.controls.length - 1));
+      const a = last.controls.length === 2 ? new Control(0, 0) : p0.subtract(last.controls[last.controls.length - 2]).subtract(last.controls[last.controls - 2]).add(last.controls[last.controls - 3]).multiply(last.controls.length === 3 ? 6 : 10)
+      const p1 = p0.add(v.divide(new Control(5, 5)))
+      const p2 = p1.add(p1).subtract(p0).add(a.divide(new Control(10, 10)))
+      const p3 = p0.add(p0).add(p5).divide(new Control(3, 3));
+      const p4 = p0.add(p5).add(p5).divide(new Control(3, 3));
 
-      this._segment = new Segment(p0, p1, p2, p3, p4, p5);
+      this._segment = new Segment(p0, p1, p2, p3, p4, p5); //// why is p1 a vector, not a control?
       this.added.push(p1, p2, p3, p4, p5);
     }
     this.path.segments.push(this._segment);
@@ -555,9 +555,9 @@ export class AddCubicSegment implements CancellableCommand, AddPathTreeItemsComm
     } else {
       const last = this.path.segments[this.path.segments.length - 1];
       const p0 = last.last;
-      const v = last.controls[-2].subtract(p0).multiply(last.controls.length - 1);
-      const p1 = p0.add(v.divide(3));
-      const p2 = p0.add(p3).divide(2);
+      const v = last.controls[last.controls.length - 2].subtract(p0).multiply(new Control(last.controls.length - 1, last.controls.length - 1));
+      const p1 = p0.add(v.divide(new Control(3, 3)));
+      const p2 = p0.add(p3).divide(new Control(2, 2));
 
       this._segment = new Segment(p0, p1, p2, p3);
       this.added.push(p1, p2, p3);
@@ -647,14 +647,14 @@ export class ConvertSegment implements CancellableCommand, AddPathTreeItemsComma
     if (prev !== undefined) {
       temp = p0.mirror(prev.controls[prev.controls.length - 2].toVector());
     } else {
-      temp = p0.add(p3.toVector()).divide(2);
+      temp = p0.add(p3.toVector()).divide(new Control(2, 2));
     }
     const p1 = new Control(temp.x, temp.y);
 
     if (next !== undefined) {
       temp = p3.mirror(next.controls[1].toVector());
     } else {
-      temp = p0.add(p3.toVector()).divide(2);
+      temp = p0.add(p3.toVector()).divide(new Control(2, 2));
     }
     const p2 = new Control(temp.x, temp.y);
 
@@ -677,19 +677,19 @@ export class ConvertSegment implements CancellableCommand, AddPathTreeItemsComma
     if (prev !== undefined) {
       temp = p0.mirror(prev.controls[prev.controls.length - 2].toVector());
     } else {
-      temp = p0.add(p5.toVector()).divide(2);
+      temp = p0.add(p5.toVector()).divide(new Control(2, 2));
     }
     const p1 = new Control(temp.x, temp.y);
 
     if (next !== undefined) {
       temp = p5.mirror(next.controls[1].toVector());
     } else {
-      temp = p0.add(p5.toVector()).divide(2);
+      temp = p0.add(p5.toVector()).divide(new Control(2, 2));
     }
     const p4 = new Control(temp.x, temp.y);
 
-    const p2 = p0.add(p0.toVector()).add(p5.toVector()).divide(3);
-    const p3 = p0.add(p5.toVector()).add(p5.toVector()).divide(3);
+    const p2 = p0.add(p0.toVector()).add(p5.toVector()).divide(new Control(3, 3));
+    const p3 = p0.add(p5.toVector()).add(p5.toVector()).divide(new Control(3, 3));
 
     this.segment.controls = [p0, p1, p2, p3, p4, p5];
   }
@@ -725,94 +725,88 @@ export class ConvertSegment implements CancellableCommand, AddPathTreeItemsComma
   }
 }
 
-export class LockC1 implements CancellableCommand { //// my C1 continuity locker
+export class LockC1 implements CancellableCommand, AddPathTreeItemsCommand, RemovePathTreeItemsCommand { //// my C1 continuity locker
   public variant: SegmentVariant;
   public last: Segment
 
   constructor(public path: Path, public segment: Segment) {
     this.variant = segment.isQuintic() ? SegmentVariant.Quintic : (segment.isCubic() ? SegmentVariant.Cubic : (segment.isLinear() ? SegmentVariant.Linear : SegmentVariant.Quintic));
-    this.last = this.path.segments[index-1];
+    this.last = this.path.segments[this.path.segments.indexOf(this.segment) - 1];
   }
 
   execute(): void {
-    const index = this.path.segments.indexOf(this.segment);
-    if (index === 0) return;
-    const p0 = segment.first;
+    const p0 = this.segment.first;
     this.previousControls = [[...this.last.controls],[...this.segment.controls]];
     if (this.variant === SegmentVariant.Linear) { //// only linear segments can influence backwards, and can't influence other linears to prevent cascading
       if (this.last.isLinear()) return;
       const v = this.segment.last.subtract(this.segment.first);
-      this.last.controls[-2] = p0.subtract(v.divide(this.last.controls.length-1));
-      this.last.controls[-2].lock = true;
+      this.last.controls[this.last.controls.length - 2] = p0.subtract(v.divide(new Control(this.last.controls.length-1, this.last.controls.length-1)));
+      this.last.controls[this.last.controls.length - 2].lock = true;
     } else {
-      const v = p0.subtract(this.last.controls[-2]).multiply(this.last.controls.length-1);
-      this.segment.controls[1] = p0 + v.divide(this.segment.controls.length-1);
+      const v = p0.subtract(this.last.controls[this.last.controls.length - 2]).multiply(new Control(this.last.controls.length-1, this.last.controls.length-1));
+      this.segment.controls[1] = p0 + v.divide(new Control(this.segment.controls.length-1, this.segment.controls.length-1));
       this.segment.controls[1].lock = true;
     }
     this.newControls = [[...this.last.controls],[...this.segment.controls]];
   }
 
-  undo(): void {
-    this.segment.controls = [...this.previousControls[1]!];
-    this.last.controls = [...this.previousControls[0]!];
+  undo(): void { //// idk if undo and redo will work
+    this.segment.controls = [...this.previousControls!];
+    this.last.controls = [...this.previousControls!];
   }
 
   redo(): void {
-    this.segment.controls = [...this.newControls[1]!];
-    this.last.controls = [...this.newControls[0]!];
+    this.segment.controls = [...this.newControls!];
+    this.last.controls = [...this.newControls!];
   }
 }
 
-export class LockC2 implements CancellableCommand { //// my C2 continuity locker
+export class LockC2 implements CancellableCommand, AddPathTreeItemsCommand, RemovePathTreeItemsCommand { //// my C2 continuity locker
   public variant: SegmentVariant;
   public last: Segment
 
   constructor(public path: Path, public segment: Segment) {
     this.variant = segment.isQuintic() ? SegmentVariant.Quintic : (segment.isCubic() ? SegmentVariant.Cubic : (segment.isLinear() ? SegmentVariant.Linear : SegmentVariant.Quintic));
-    this.last = this.path.segments[index-1];
+    this.last = this.path.segments[this.path.segments.indexOf(this.segment) - 1];
   }
 
   execute(): void {
-    const index = this.path.segments.indexOf(this.segment);
-    if (index === 0) return;
-    const p0 = segment.first;
+    const p0 = this.segment.first;
     this.previousControls = [[...this.last.controls],[...this.segment.controls]];
     if (this.variant === SegmentVariant.Linear) { //// only linear segments can influence backwards, and can't influence other linears to prevent cascading
       if (this.last.isLinear()) return;
       const v = this.segment.last.subtract(this.segment.first);
-      this.last.controls[-2] = p0.subtract(v.divide(this.last.controls.length-1));
-      this.last.controls[-2].lock = true;
-      pn1 = this.last.controls[-2];
-      this.last.controls[-3] = pn1.mirror(p0);
-      this.last.controls[-3].lock = true;
+      this.last.controls[this.last.controls.length - 2] = p0.subtract(v.divide(new Control(this.last.controls.length-1, this.last.controls.length-1)));
+      this.last.controls[this.last.controls.length - 2].lock = true;
+      const pn1 = this.last.controls[this.last.controls.length - 2];
+      this.last.controls[this.last.controls.length - 3] = pn1.mirror(p0);
+      this.last.controls[this.last.controls.length - 3].lock = true;
     } else {
-      if (this.variant === SegmentVariant.Cubic && last.isCubic()) return; //// cubic segments can't influence other cubics to prevent cascading
+      if (this.variant === SegmentVariant.Cubic && this.last.isCubic()) return; //// cubic segments can't influence other cubics to prevent cascading
       //// the most cascading that could happen is linear/quintic -> cubic -> quintic
-      const v = p0.subtract(this.last.controls[-2]).multiply(this.last.controls.length-1);
-      this.segment.controls[1] = p0 + v.divide(this.segment.controls.length-1);
+      const v = p0.subtract(this.last.controls[this.last.controls.length - 2]).multiply(new Control(this.last.controls.length-1, this.last.controls.length-1));
+      this.segment.controls[1] = p0 + v.divide(new Control(this.segment.controls.length-1, this.segment.controls.length-1));
       this.segment.controls[1].lock = true;
       const p1 = this.segment.controls[1];
-      if (last.isLinear()) {
-        const a = new Control(0, 0);
-      } else {
-        const pn1 = last.controls[-2];
-        const pn2 = last.controls[-3];
-        const a = p0.subtract(pn1).subtract(pn1.subtract(pn2)).multiply(6 ? this.last.isCubic() : 10);
+      if (!this.last.isLinear()) {
+        const pn1 = this.last.controls[this.last.controls.length - 2];
+        const pn2 = this.last.controls[this.last.controls.length - 3];
       }
-      this.segment.controls[2] = a.divide(6 ? this.segment.isCubic() : 10).subtract(p0).add(p1).add(p1);
-      this.segment.controls[2].lock = true;
+      const a = this.last.isLinear() ? new Control(0, 0) : p0.subtract(pn1).subtract(pn1.subtract(pn2)).multiply(6 ? this.last.isCubic() : 10);
+      this.segment.controls[2] = a.divide(new Control(6 ? this.segment.isCubic() : 10, 6 ? this.segment.isCubic() : 10)).subtract(p0).add(p1).add(p1);
+      this.segment.controls[2]!.lock = true;
     }
     this.newControls = [[...this.last.controls],[...this.segment.controls]];
   }
 
   undo(): void {
-    this.segment.controls = [...this.previousControls[1]!];
-    this.last.controls = [...this.previousControls[0]!];
+    this.segment.controls = [...this.previousControls!];
+    this.last.controls = [...this.previousControls!];
   }
 
   redo(): void {
-    this.segment.controls = [...this.newControls[1]!];
-    this.last.controls = [...this.newControls[0]!];
+    this.segment.controls = [...this.newControls!];
+    this.last.controls = [...this.newControls!];
   }
 }
 
