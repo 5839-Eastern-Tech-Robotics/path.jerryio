@@ -63,6 +63,33 @@ const FieldTooltipContent = observer((props: {}) => {
   const { app, clipboard } = getAppStores();
   const fieldEditor = app.fieldEditor;
 
+  function onAddQuintic() {
+    if (fieldEditor.tooltipPosition === undefined) return;
+
+    const posInPx = fieldEditor.fcc.getUnboundedPx(fieldEditor.tooltipPosition);
+    if (posInPx === undefined) return;
+
+    const cpInUOL = fieldEditor.fcc.toUOL(new EndControl(posInPx.x, posInPx.y, 0));
+
+    // UX: Set target path to "interested path"
+    let targetPath: Path | undefined = app.interestedPath();
+    if (targetPath === undefined) {
+      // UX: Create empty new path if: no path exists
+      targetPath = app.format.createPath();
+      app.history.execute(`Add path ${targetPath.uid}`, new AddPath(app.paths, targetPath));
+    }
+
+    if (targetPath.visible && !targetPath.lock) {
+      // UX: Add control point if: path is selected and visible and not locked
+      app.history.execute(
+        `Add quintic segment with end control point ${cpInUOL.uid} to path ${targetPath.uid}`,
+        new AddQuinticSegment(targetPath, cpInUOL)
+      );
+
+      fixControlTooCloseToTheEndControl();
+    }
+  }
+  
   function onAddCubic() {
     if (fieldEditor.tooltipPosition === undefined) return;
 
@@ -121,6 +148,7 @@ const FieldTooltipContent = observer((props: {}) => {
 
   return (
     <Box>
+      <CanvasTooltip text="Quintic" onClick={onAddQuintic} />
       <CanvasTooltip text="Curve" onClick={onAddCubic} />
       <CanvasTooltip text="Line" onClick={onAddLinear} />
       {clipboard.hasData && <CanvasTooltip text="Paste" onClick={onPaste} />}
@@ -727,12 +755,19 @@ const FieldCanvasElement = observer((props: {}) => {
     if (targetPath.visible && !targetPath.lock) {
       // UX: Add control point if: path is selected and visible and not locked
       if (evt.button === 0) {
-        // UX: Add 4-controls cubic if: left click
-        app.history.execute(
-          `Add cubic segment with end control point ${cpInUOL.uid} to path ${targetPath.uid}`,
-          new AddCubicSegment(targetPath, cpInUOL)
-        );
-
+        // UX: Add 4-controls cubic if: left click //// and no alt key
+        //// UX: Add 6-controls quintic if: left click and alt key
+        if (evt.altKey === false) {
+          app.history.execute(
+            `Add cubic segment with end control point ${cpInUOL.uid} to path ${targetPath.uid}`,
+            new AddCubicSegment(targetPath, cpInUOL)
+          );
+        } else {
+          app.history.execute(
+            `Add quintic segment with end control point ${cpInUOL.uid} to path ${targetPath.uid}`,
+            new AddQuinticSegment(targetPath, cpInUOL)
+          );
+        }
         fixControlTooCloseToTheEndControl();
       } else if (evt.button === 2) {
         // UX: Add straight line if: right click
