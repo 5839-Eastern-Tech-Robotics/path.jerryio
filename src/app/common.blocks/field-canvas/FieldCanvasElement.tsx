@@ -41,7 +41,7 @@ function fixControlTooCloseToTheEndControl() {
   if (path.segments.length !== 1) return;
   const segment = path.segments[0];
 
-  if (segment.controls.length !== 4) return;
+  if ((segment.controls.length !== 4) && (segment.controls.length !== 6)) return;
 
   function fix(control: Control, endControl: EndControl) {
     const uc = new UnitConverter(app.gc.uol, UnitOfLength.Millimeter);
@@ -56,7 +56,7 @@ function fixControlTooCloseToTheEndControl() {
   }
 
   fix(segment.controls[1], segment.controls[0]);
-  fix(segment.controls[2], segment.controls[3]);
+  fix(segment.controls[segment.controls.length-2], segment.controls[segment.controls.length-1]);
 }
 
 const FieldTooltipContent = observer((props: {}) => {
