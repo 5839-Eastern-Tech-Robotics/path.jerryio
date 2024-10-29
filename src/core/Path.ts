@@ -280,7 +280,8 @@ export interface KeyframePos {
   yPos: number; // [0...1]
 }
 
-export abstract class Keyframe implements CanvasEntity { //// abstract class is a base class that cannot be called on its own, only its children can be
+export abstract class Keyframe implements CanvasEntity {
+  //// abstract class is a base class that cannot be called on its own, only its children can be
   @Matches(/^[a-zA-Z0-9]+$/)
   @MinLength(10)
   @Expose()
@@ -338,7 +339,8 @@ export class SpeedKeyframe extends Keyframe implements CanvasEntity {
     });
   }
 
-  process(pc: PathConfig, responsible: Point[], nextFrame?: SpeedKeyframe): void { //// WHERE STUFF ACTUALLY HAPPENS
+  process(pc: PathConfig, responsible: Point[], nextFrame?: SpeedKeyframe): void {
+    //// WHERE STUFF ACTUALLY HAPPENS
     const limitFrom = pc.speedLimit.from;
     const limitTo = pc.speedLimit.to;
     const limitDiff = limitTo - limitFrom;
@@ -380,7 +382,8 @@ export class LookaheadKeyframe extends Keyframe implements CanvasEntity {
     makeObservable(this, {});
   }
 
-  process(pc: PathConfig, responsible: Point[], nextFrame?: LookaheadKeyframe): void { //// WHERE STUFF ACTUALLY HAPPENS
+  process(pc: PathConfig, responsible: Point[], nextFrame?: LookaheadKeyframe): void {
+    //// WHERE STUFF ACTUALLY HAPPENS
     if (pc.lookaheadLimit === undefined) return;
     const limitFrom = pc.lookaheadLimit.from;
     const limitTo = pc.lookaheadLimit.to;
@@ -453,7 +456,7 @@ export enum SegmentVariant {
   Quintic = "quintic"
 }
 
-export type LinearSegmentControls = [EndControl, EndControl]; 
+export type LinearSegmentControls = [EndControl, EndControl];
 export type CubicSegmentControls = [EndControl, Control, Control, EndControl];
 export type QuinticSegmentControls = [EndControl, Control, Control, Control, Control, EndControl];
 export type SegmentControls = LinearSegmentControls | CubicSegmentControls | QuinticSegmentControls;
@@ -501,7 +504,8 @@ export class Segment implements CanvasEntity {
   constructor(first: EndControl, last: EndControl);
   constructor(first: EndControl, idx1: Control, idx2: Control, last: EndControl);
   constructor(first: EndControl, idx1: Control, idx2: Control, idx3: Control, idx4: Control, last: EndControl);
-  constructor(...list: [] | SegmentControls) { //// this already accepts generalized lists of controls for the constructor :fire:
+  constructor(...list: [] | SegmentControls) {
+    //// this already accepts generalized lists of controls for the constructor :fire:
     this.controls = list as SegmentControls;
     this.uid = makeId(10);
     makeAutoObservable(this);
@@ -526,7 +530,7 @@ export class Segment implements CanvasEntity {
   isQuintic(): this is Segment & { controls: QuinticSegmentControls } {
     return this.controls.length === 6;
   }
-  
+
   isCubic(): this is Segment & { controls: CubicSegmentControls } {
     return this.controls.length === 4;
   }
@@ -536,7 +540,7 @@ export class Segment implements CanvasEntity {
   }
 
   getVariant(): SegmentVariant {
-    return this.isCubic() ? SegmentVariant.Cubic : (this.isLinear() ? SegmentVariant.Linear : SegmentVariant.Quintic);
+    return this.isCubic() ? SegmentVariant.Cubic : this.isLinear() ? SegmentVariant.Linear : SegmentVariant.Quintic;
   }
 
   isLocked(): boolean {
@@ -749,7 +753,8 @@ export function ValidateSegmentControls(validationOptions?: ValidationOptions) {
           // check if the last is EndControl
           if (!(array[array.length - 1] instanceof EndControl)) return false;
           // check if the middle is Control
-          if ((array.length === 4 || array.length === 6) && array.slice(1, -1).some(item => item instanceof EndControl)) return false;
+          if ((array.length === 4 || array.length === 6) && array.slice(1, -1).some(item => item instanceof EndControl))
+            return false;
 
           return true;
         },

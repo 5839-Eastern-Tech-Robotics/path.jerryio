@@ -1,4 +1,5 @@
 # Changes (in progress)
+
 - quintic bezier spline
 - snapping for C1, G2, and C2 continuity
 

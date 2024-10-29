@@ -498,18 +498,30 @@ export class AddQuinticSegment implements CancellableCommand, AddPathTreeItemsCo
     if (this.path.segments.length === 0) {
       const p0 = new EndControl(0, 0, 0);
       const p1 = new Control(p0.x, p5.y);
-      const p2 = new p5.divide(new Control(3, 3))
-      const p3 = p2.add(p2)
-      const p4 = new Control(p5.x, p0.y);
+      const p2 = p5.divide(new Control(3, 3));
+      const p3 = p2.add(p2);
+      const p4 = Control(p5.x, p0.y);
       this._segment = new Segment(p0, p1, p2, p3, p4, p5);
       this.added.push(p0, p1, p2, p3, p4, p5);
     } else {
       const last = this.path.segments[this.path.segments.length - 1];
       const p0 = last.last;
-      const v = last.controls[last.controls.length - 2].subtract(p0).multiply(new Control(last.controls.length - 1, last.controls.length - 1));
-      const a = last.controls.length === 2 ? new Control(0, 0) : p0.subtract(last.controls[last.controls.length - 2]).subtract(last.controls[last.controls - 2]).add(last.controls[last.controls - 3]).multiply(last.controls.length === 3 ? 6 : 10)
-      const p1 = p0.add(v.divide(new Control(5, 5)))
-      const p2 = p1.add(p1).subtract(p0).add(a.divide(new Control(10, 10)))
+      const v = last.controls[last.controls.length - 2]
+        .subtract(p0)
+        .multiply(new Control(last.controls.length - 1, last.controls.length - 1));
+      const a =
+        last.controls.length === 2
+          ? new Control(0, 0)
+          : p0
+              .subtract(last.controls[last.controls.length - 2])
+              .subtract(last.controls[last.controls.length - 2])
+              .add(last.controls[last.controls.length - 3])
+              .multiply(last.controls.length === 3 ? 6 : 10);
+      const p1 = p0.add(v.divide(new Control(5, 5)));
+      const p2 = p1
+        .add(p1)
+        .subtract(p0)
+        .add(a.divide(new Control(10, 10)));
       const p3 = p0.add(p0).add(p5).divide(new Control(3, 3));
       const p4 = p0.add(p5).add(p5).divide(new Control(3, 3));
 
@@ -555,7 +567,9 @@ export class AddCubicSegment implements CancellableCommand, AddPathTreeItemsComm
     } else {
       const last = this.path.segments[this.path.segments.length - 1];
       const p0 = last.last;
-      const v = last.controls[last.controls.length - 2].subtract(p0).multiply(new Control(last.controls.length - 1, last.controls.length - 1));
+      const v = last.controls[last.controls.length - 2]
+        .subtract(p0)
+        .multiply(new Control(last.controls.length - 1, last.controls.length - 1));
       const p1 = p0.add(v.divide(new Control(3, 3)));
       const p2 = p0.add(p3).divide(new Control(2, 2));
 
@@ -618,13 +632,18 @@ export class AddLinearSegment implements CancellableCommand, AddPathTreeItemsCom
   }
 }
 
-export class ConvertSegment implements CancellableCommand, AddPathTreeItemsCommand, RemovePathTreeItemsCommand { //// WHERE STUFF ACTUALLY HAPPENS
+export class ConvertSegment implements CancellableCommand, AddPathTreeItemsCommand, RemovePathTreeItemsCommand {
+  //// WHERE STUFF ACTUALLY HAPPENS
   protected previousControls: SegmentControls | undefined;
   protected newControls: SegmentControls | undefined;
   public variant: SegmentVariant;
 
   constructor(public path: Path, public segment: Segment) {
-    this.variant = segment.isCubic() ? SegmentVariant.Cubic : (segment.isLinear() ? SegmentVariant.Linear : SegmentVariant.Quintic);
+    this.variant = segment.isCubic()
+      ? SegmentVariant.Cubic
+      : segment.isLinear()
+      ? SegmentVariant.Linear
+      : SegmentVariant.Quintic;
   }
 
   protected convertToLine(): void {
@@ -725,58 +744,87 @@ export class ConvertSegment implements CancellableCommand, AddPathTreeItemsComma
   }
 }
 
-export class LockC1 implements CancellableCommand, AddPathTreeItemsCommand, RemovePathTreeItemsCommand { //// my C1 continuity locker
+export class LockC1 implements CancellableCommand {
+  //// my C1 continuity locker
   public variant: SegmentVariant;
-  public last: Segment
+  public last: Segment;
+  protected previousControls: [SegmentControls | undefined, SegmentControls | undefined];
+  protected newControls: [SegmentControls | undefined, SegmentControls | undefined];
 
   constructor(public path: Path, public segment: Segment) {
-    this.variant = segment.isQuintic() ? SegmentVariant.Quintic : (segment.isCubic() ? SegmentVariant.Cubic : (segment.isLinear() ? SegmentVariant.Linear : SegmentVariant.Quintic));
+    this.variant = segment.isQuintic()
+      ? SegmentVariant.Quintic
+      : segment.isCubic()
+      ? SegmentVariant.Cubic
+      : segment.isLinear()
+      ? SegmentVariant.Linear
+      : SegmentVariant.Quintic;
     this.last = this.path.segments[this.path.segments.indexOf(this.segment) - 1];
   }
 
   execute(): void {
     const p0 = this.segment.first;
-    this.previousControls = [[...this.last.controls],[...this.segment.controls]];
-    if (this.variant === SegmentVariant.Linear) { //// only linear segments can influence backwards, and can't influence other linears to prevent cascading
+    this.previousControls = [[...this.last.controls], [...this.segment.controls]];
+    if (this.variant === SegmentVariant.Linear) {
+      //// only linear segments can influence backwards, and can't influence other linears to prevent cascading
       if (this.last.isLinear()) return;
       const v = this.segment.last.subtract(this.segment.first);
-      this.last.controls[this.last.controls.length - 2] = p0.subtract(v.divide(new Control(this.last.controls.length-1, this.last.controls.length-1)));
+      this.last.controls[this.last.controls.length - 2] = p0.subtract(
+        v.divide(new Control(this.last.controls.length - 1, this.last.controls.length - 1))
+      );
       this.last.controls[this.last.controls.length - 2].lock = true;
     } else {
-      const v = p0.subtract(this.last.controls[this.last.controls.length - 2]).multiply(new Control(this.last.controls.length-1, this.last.controls.length-1));
-      this.segment.controls[1] = p0 + v.divide(new Control(this.segment.controls.length-1, this.segment.controls.length-1));
+      const v = p0
+        .subtract(this.last.controls[this.last.controls.length - 2])
+        .multiply(new Control(this.last.controls.length - 1, this.last.controls.length - 1));
+      this.segment.controls[1] = p0.add(
+        v.divide(new Control(this.segment.controls.length - 1, this.segment.controls.length - 1))
+      );
       this.segment.controls[1].lock = true;
     }
-    this.newControls = [[...this.last.controls],[...this.segment.controls]];
+    this.newControls = [[...this.last.controls], [...this.segment.controls]];
   }
 
-  undo(): void { //// idk if undo and redo will work
-    this.segment.controls = [...this.previousControls!];
-    this.last.controls = [...this.previousControls!];
+  undo(): void {
+    //// idk if undo and redo will work
+    this.segment.controls = [...this.previousControls!] as SegmentControls;
+    this.last.controls = [...this.previousControls!] as SegmentControls;
   }
 
   redo(): void {
-    this.segment.controls = [...this.newControls!];
-    this.last.controls = [...this.newControls!];
+    this.segment.controls = [...this.newControls!] as SegmentControls;
+    this.last.controls = [...this.newControls!] as SegmentControls;
   }
 }
 
-export class LockC2 implements CancellableCommand, AddPathTreeItemsCommand, RemovePathTreeItemsCommand { //// my C2 continuity locker
+export class LockC2 implements CancellableCommand {
+  //// my C2 continuity locker
   public variant: SegmentVariant;
-  public last: Segment
+  public last: Segment;
+  protected previousControls: [SegmentControls | undefined, SegmentControls | undefined];
+  protected newControls: [SegmentControls | undefined, SegmentControls | undefined];
 
   constructor(public path: Path, public segment: Segment) {
-    this.variant = segment.isQuintic() ? SegmentVariant.Quintic : (segment.isCubic() ? SegmentVariant.Cubic : (segment.isLinear() ? SegmentVariant.Linear : SegmentVariant.Quintic));
+    this.variant = segment.isQuintic()
+      ? SegmentVariant.Quintic
+      : segment.isCubic()
+      ? SegmentVariant.Cubic
+      : segment.isLinear()
+      ? SegmentVariant.Linear
+      : SegmentVariant.Quintic;
     this.last = this.path.segments[this.path.segments.indexOf(this.segment) - 1];
   }
 
   execute(): void {
     const p0 = this.segment.first;
-    this.previousControls = [[...this.last.controls],[...this.segment.controls]];
-    if (this.variant === SegmentVariant.Linear) { //// only linear segments can influence backwards, and can't influence other linears to prevent cascading
+    this.previousControls = [[...this.last.controls], [...this.segment.controls]];
+    if (this.variant === SegmentVariant.Linear) {
+      //// only linear segments can influence backwards, and can't influence other linears to prevent cascading
       if (this.last.isLinear()) return;
       const v = this.segment.last.subtract(this.segment.first);
-      this.last.controls[this.last.controls.length - 2] = p0.subtract(v.divide(new Control(this.last.controls.length-1, this.last.controls.length-1)));
+      this.last.controls[this.last.controls.length - 2] = p0.subtract(
+        v.divide(new Control(this.last.controls.length - 1, this.last.controls.length - 1))
+      );
       this.last.controls[this.last.controls.length - 2].lock = true;
       const pn1 = this.last.controls[this.last.controls.length - 2];
       this.last.controls[this.last.controls.length - 3] = pn1.mirror(p0);
@@ -784,29 +832,42 @@ export class LockC2 implements CancellableCommand, AddPathTreeItemsCommand, Remo
     } else {
       if (this.variant === SegmentVariant.Cubic && this.last.isCubic()) return; //// cubic segments can't influence other cubics to prevent cascading
       //// the most cascading that could happen is linear/quintic -> cubic -> quintic
-      const v = p0.subtract(this.last.controls[this.last.controls.length - 2]).multiply(new Control(this.last.controls.length-1, this.last.controls.length-1));
-      this.segment.controls[1] = p0 + v.divide(new Control(this.segment.controls.length-1, this.segment.controls.length-1));
+      const v = p0
+        .subtract(this.last.controls[this.last.controls.length - 2])
+        .multiply(new Control(this.last.controls.length - 1, this.last.controls.length - 1));
+      this.segment.controls[1] = p0.add(
+        v.divide(new Control(this.segment.controls.length - 1, this.segment.controls.length - 1))
+      );
       this.segment.controls[1].lock = true;
       const p1 = this.segment.controls[1];
       if (!this.last.isLinear()) {
         const pn1 = this.last.controls[this.last.controls.length - 2];
         const pn2 = this.last.controls[this.last.controls.length - 3];
       }
-      const a = this.last.isLinear() ? new Control(0, 0) : p0.subtract(pn1).subtract(pn1.subtract(pn2)).multiply(6 ? this.last.isCubic() : 10);
-      this.segment.controls[2] = a.divide(new Control(6 ? this.segment.isCubic() : 10, 6 ? this.segment.isCubic() : 10)).subtract(p0).add(p1).add(p1);
+      const a = this.last.isLinear()
+        ? new Control(0, 0)
+        : p0
+            .subtract(pn1)
+            .subtract(pn1.subtract(pn2))
+            .multiply(6 ? this.last.isCubic() : 10);
+      this.segment.controls[2] = a
+        .divide(new Control(6 ? this.segment.isCubic() : 10, 6 ? this.segment.isCubic() : 10))
+        .subtract(p0)
+        .add(p1)
+        .add(p1);
       this.segment.controls[2]!.lock = true;
     }
-    this.newControls = [[...this.last.controls],[...this.segment.controls]];
+    this.newControls = [[...this.last.controls], [...this.segment.controls]];
   }
 
   undo(): void {
-    this.segment.controls = [...this.previousControls!];
-    this.last.controls = [...this.previousControls!];
+    this.segment.controls = [...this.previousControls!] as SegmentControls;
+    this.last.controls = [...this.previousControls!] as SegmentControls;
   }
 
   redo(): void {
-    this.segment.controls = [...this.newControls!];
-    this.last.controls = [...this.newControls!];
+    this.segment.controls = [...this.newControls!] as SegmentControls;
+    this.last.controls = [...this.newControls!] as SegmentControls;
   }
 }
 
