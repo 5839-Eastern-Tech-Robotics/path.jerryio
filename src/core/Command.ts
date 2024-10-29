@@ -500,7 +500,7 @@ export class AddQuinticSegment implements CancellableCommand, AddPathTreeItemsCo
       const p1 = new Control(p0.x, p5.y);
       const p2 = p5.divide(new Control(3, 3));
       const p3 = p2.add(p2);
-      const p4 = Control(p5.x, p0.y);
+      const p4 = new Control(p5.x, p0.y);
       this._segment = new Segment(p0, p1, p2, p3, p4, p5);
       this.added.push(p0, p1, p2, p3, p4, p5);
     } else {
@@ -516,7 +516,7 @@ export class AddQuinticSegment implements CancellableCommand, AddPathTreeItemsCo
               .subtract(last.controls[last.controls.length - 2])
               .subtract(last.controls[last.controls.length - 2])
               .add(last.controls[last.controls.length - 3])
-              .multiply(last.controls.length === 3 ? 6 : 10);
+              .multiply(last.controls.length === 4 ? 6 : 10);
       const p1 = p0.add(v.divide(new Control(5, 5)));
       const p2 = p1
         .add(p1)
@@ -748,8 +748,8 @@ export class LockC1 implements CancellableCommand {
   //// my C1 continuity locker
   public variant: SegmentVariant;
   public last: Segment;
-  protected previousControls: [SegmentControls | undefined, SegmentControls | undefined];
-  protected newControls: [SegmentControls | undefined, SegmentControls | undefined];
+  protected previousControls: [SegmentControls, SegmentControls] | undefined;
+  protected newControls: [SegmentControls, SegmentControls] | undefined;
 
   constructor(public path: Path, public segment: Segment) {
     this.variant = segment.isQuintic()
@@ -786,14 +786,15 @@ export class LockC1 implements CancellableCommand {
   }
 
   undo(): void {
-    //// idk if undo and redo will work
-    this.segment.controls = [...this.previousControls!] as SegmentControls;
-    this.last.controls = [...this.previousControls!] as SegmentControls;
+    if (this.previousControls === undefined) return;
+    this.segment.controls = [...this.previousControls[1]!] as SegmentControls;
+    this.last.controls = [...this.previousControls[0]!] as SegmentControls;
   }
 
   redo(): void {
-    this.segment.controls = [...this.newControls!] as SegmentControls;
-    this.last.controls = [...this.newControls!] as SegmentControls;
+    if (this.newControls === undefined) return;
+    this.segment.controls = [...this.newControls[1]!] as SegmentControls;
+    this.last.controls = [...this.newControls[0]!] as SegmentControls;
   }
 }
 
@@ -801,8 +802,8 @@ export class LockC2 implements CancellableCommand {
   //// my C2 continuity locker
   public variant: SegmentVariant;
   public last: Segment;
-  protected previousControls: [SegmentControls | undefined, SegmentControls | undefined];
-  protected newControls: [SegmentControls | undefined, SegmentControls | undefined];
+  protected previousControls: [SegmentControls, SegmentControls] | undefined;
+  protected newControls: [SegmentControls, SegmentControls] | undefined;
 
   constructor(public path: Path, public segment: Segment) {
     this.variant = segment.isQuintic()
@@ -843,31 +844,34 @@ export class LockC2 implements CancellableCommand {
       if (!this.last.isLinear()) {
         const pn1 = this.last.controls[this.last.controls.length - 2];
         const pn2 = this.last.controls[this.last.controls.length - 3];
+        const a = p0
+          .subtract(pn1)
+          .subtract(pn1.subtract(pn2))
+          .multiply(this.last.isCubic() ? 6 : 10);
+        this.segment.controls[2] = p1.add(p1).subtract(new Control(p0.x, p0.y));
+        this.segment.controls[2] = a
+          .divide(new Control(this.segment.isCubic() ? 6 : 10, this.segment.isCubic() ? 6 : 10))
+          .subtract(p0)
+          .add(p1)
+          .add(p1);
+        this.segment.controls[2]!.lock = true;
       }
-      const a = this.last.isLinear()
-        ? new Control(0, 0)
-        : p0
-            .subtract(pn1)
-            .subtract(pn1.subtract(pn2))
-            .multiply(6 ? this.last.isCubic() : 10);
-      this.segment.controls[2] = a
-        .divide(new Control(6 ? this.segment.isCubic() : 10, 6 ? this.segment.isCubic() : 10))
-        .subtract(p0)
-        .add(p1)
-        .add(p1);
+      this.segment.controls[2] = p1.add(p1).subtract(new Control(p0.x, p0.y));
       this.segment.controls[2]!.lock = true;
     }
     this.newControls = [[...this.last.controls], [...this.segment.controls]];
   }
 
   undo(): void {
-    this.segment.controls = [...this.previousControls!] as SegmentControls;
-    this.last.controls = [...this.previousControls!] as SegmentControls;
+    if (this.previousControls === undefined) return;
+    this.segment.controls = [...this.previousControls[1]!] as SegmentControls;
+    this.last.controls = [...this.previousControls[0]!] as SegmentControls;
   }
 
   redo(): void {
-    this.segment.controls = [...this.newControls!] as SegmentControls;
-    this.last.controls = [...this.newControls!] as SegmentControls;
+    if (this.newControls === undefined) return;
+    this.segment.controls = [...this.newControls[1]!] as SegmentControls;
+    this.last.controls = [...this.newControls[0]!] as SegmentControls;
   }
 }
 
