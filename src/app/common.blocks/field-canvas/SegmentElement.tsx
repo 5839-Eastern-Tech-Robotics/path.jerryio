@@ -31,6 +31,37 @@ const SegmentElement = observer((props: SegmentElementProps) => {
             />
           )}
         </>
+      ) : props.segment.controls.length === 6 ? (
+        <>
+          {props.segment.controls[1].visible &&
+            props.segment.controls[2].visible && (
+            <SegmentControlVisualLineElement
+              start={props.segment.controls[0]}
+              end={props.segment.controls[1]}
+              fcc={props.fcc}
+            />
+          ) && (
+            <SegmentControlVisualLineElement
+              start={props.segment.controls[1]}
+              end={props.segment.controls[2]}
+              fcc={props.fcc}
+            />
+          )}
+          {props.segment.controls[3].visible &&
+            props.segment.controls[4].visible && (
+            <SegmentControlVisualLineElement
+              start={props.segment.controls[3]}
+              end={props.segment.controls[4]}
+              fcc={props.fcc}
+            />
+          ) && (
+            <SegmentControlVisualLineElement
+              start={props.segment.controls[4]}
+              end={props.segment.controls[5]}
+              fcc={props.fcc}
+            />
+          )}
+        </>
       ) : null}
       <SegmentPointsHitBoxElement {...props} />
       {/* UX: Do not render control point here due to z-index */}
