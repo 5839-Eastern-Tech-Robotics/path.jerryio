@@ -338,6 +338,34 @@ const TreeItem = observer((props: TreeItemProps) => {
     );
   }
 
+  function onC1LockClick(event: React.MouseEvent<SVGSVGElement, MouseEvent>) {
+    const affected = app.isSelected(entity) ? app.selectedEntities : [entity];
+    if (affected.length !== 2) return;
+    if (!((typeof affected[0] === "Path" && typeof affected[1] === "Segment") || (typeof affected[1] === "Path" && typeof affected[0] === "Segment"))) return;
+    if (typeof affected[0] === "Segment") {
+      affected = [affected[1], affected[0]];
+    }
+    app.history.execute(
+      `Update entities lock to true, C1 position`,
+      new LockC1(...affected),
+      0 // Disable merge //// what?
+    );
+  }
+
+  function onC2LockClick(event: React.MouseEvent<SVGSVGElement, MouseEvent>) {
+    const affected = app.isSelected(entity) ? app.selectedEntities : [entity];
+    if (affected.length !== 2) return;
+    if (!((typeof affected[0] === "Path" && typeof affected[1] === "Segment") || (typeof affected[1] === "Path" && typeof affected[0] === "Segment"))) return;
+    if (typeof affected[0] === "Segment") {
+      affected = [affected[1], affected[0]];
+    }
+    app.history.execute(
+      `Update entities lock to true, C2 position`,
+      new LockC2(...affected),
+      0 // Disable merge //// what?
+    );
+  }
+
   function onDeleteClick(event: React.MouseEvent<SVGSVGElement, MouseEvent>) {
     const target = entity.uid; // ALGO: use uid to have better performance
     const affected = app.isSelected(target) ? app.selectedEntityIds : [target];
@@ -426,7 +454,7 @@ const TreeItem = observer((props: TreeItemProps) => {
                 parent?.lock === true ? (
                   <FiberManualRecordOutlinedIcon
                     className="PathTreePanel-TreeFuncIcon PathTreePanel-TreeFuncIcon_show"
-                    onClick={action(onLockClick)}
+                    onClick={action(onLockClick)} //// this is where it locks, I think? need to extend to C1 and C2
                   />
                 ) : (
                   <LockOpenIcon className="PathTreePanel-TreeFuncIcon" onClick={action(onLockClick)} />
