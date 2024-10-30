@@ -4,8 +4,8 @@ import DeleteIcon from "@mui/icons-material/Delete";
 import FiberManualRecordOutlinedIcon from "@mui/icons-material/FiberManualRecordOutlined";
 import LockOpenIcon from "@mui/icons-material/LockOpen";
 import LockOutlinedIcon from "@mui/icons-material/LockOutlined";
-import LooksOneIcon from "@mui/icons-material/LooksOne"
-import LooksTwoIcon from "@mui/icons-material/LooksTwo"
+import LooksOneIcon from "@mui/icons-material/LooksOne";
+import LooksTwoIcon from "@mui/icons-material/LooksTwo";
 import VisibilityIcon from "@mui/icons-material/Visibility";
 import VisibilityOffOutlinedIcon from "@mui/icons-material/VisibilityOffOutlined";
 import AddIcon from "@mui/icons-material/Add";
@@ -343,7 +343,13 @@ const TreeItem = observer((props: TreeItemProps) => {
   function onC1LockClick(event: React.MouseEvent<SVGSVGElement, MouseEvent>) {
     const affected = app.isSelected(entity) ? app.selectedEntities : [entity];
     if (affected.length !== 2) return;
-    if (!((typeof affected[0] === "Path" && typeof affected[1] === "Segment") || (typeof affected[1] === "Path" && typeof affected[0] === "Segment"))) return;
+    if (
+      !(
+        (typeof affected[0] === "Path" && typeof affected[1] === "Segment") ||
+        (typeof affected[1] === "Path" && typeof affected[0] === "Segment")
+      )
+    )
+      return;
     if (typeof affected[0] === "Segment") {
       affected = [affected[1], affected[0]];
     }
@@ -357,7 +363,13 @@ const TreeItem = observer((props: TreeItemProps) => {
   function onC2LockClick(event: React.MouseEvent<SVGSVGElement, MouseEvent>) {
     const affected = app.isSelected(entity) ? app.selectedEntities : [entity];
     if (affected.length !== 2) return;
-    if (!((typeof affected[0] === "Path" && typeof affected[1] === "Segment") || (typeof affected[1] === "Path" && typeof affected[0] === "Segment"))) return;
+    if (
+      !(
+        (typeof affected[0] === "Path" && typeof affected[1] === "Segment") ||
+        (typeof affected[1] === "Path" && typeof affected[0] === "Segment")
+      )
+    )
+      return;
     if (typeof affected[0] === "Segment") {
       affected = [affected[1], affected[0]];
     }
@@ -452,6 +464,14 @@ const TreeItem = observer((props: TreeItemProps) => {
                 <EditIcon className="PathTreePanel-TreeFuncIcon" onClick={action(onItemNameDoubleClick)} />
               )}
               {isDraggable && <DeleteIcon className="PathTreePanel-TreeFuncIcon" onClick={action(onDeleteClick)} />}
+              <LooksOneIcon
+                className="PathTreePanel-TreeFuncIcon PathTreePanel-TreeFuncIcon_show"
+                onClick={action(onLockC1)}
+              />
+              <LooksTwoIcon
+                className="PathTreePanel-TreeFuncIcon PathTreePanel-TreeFuncIcon_show"
+                onClick={action(onLockC2)}
+              />
               {entity.lock === false ? (
                 parent?.lock === true ? (
                   <FiberManualRecordOutlinedIcon
@@ -467,16 +487,6 @@ const TreeItem = observer((props: TreeItemProps) => {
                   onClick={action(onLockClick)}
                 />
               )}
-              {
-                <LooksOneIcon
-                  className="PathTreePanel-TreeFuncIcon PathTreePanel-TreeFuncIcon_show"
-                  onClick={action(onLockC1)}
-                />
-                <LooksTwoIcon
-                  className="PathTreePanel-TreeFuncIcon PathTreePanel-TreeFuncIcon_show"
-                  onClick={action(onLockC2)}
-                />
-              }
               {entity.visible === true ? (
                 parent?.visible === false ? (
                   <FiberManualRecordOutlinedIcon
