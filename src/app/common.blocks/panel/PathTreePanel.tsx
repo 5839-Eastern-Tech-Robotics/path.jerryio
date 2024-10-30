@@ -23,7 +23,9 @@ import {
   MovePath,
   RemovePathsAndEndControls,
   UpdatePathTreeItems,
-  UpdateProperties
+  UpdateProperties,
+  LockC1,
+  LockC2
 } from "@core/Command";
 import { getAppStores } from "@core/MainApp";
 import { Quantity, UnitOfLength } from "@core/Unit";
@@ -345,19 +347,25 @@ const TreeItem = observer((props: TreeItemProps) => {
     if (affected.length !== 2) return;
     if (
       !(
-        (typeof affected[0] === "Path" && typeof affected[1] === "Segment") ||
-        (typeof affected[1] === "Path" && typeof affected[0] === "Segment")
+        (affected[0] instanceof Path && affected[1] instanceof Segment) ||
+        (affected[1] instanceof Path && affected[0] instanceof Segment)
       )
     )
       return;
-    if (typeof affected[0] === "Segment") {
-      affected = [affected[1], affected[0]];
+    if (affected[0] instanceof Path && affected[1] instanceof Segment) {
+      app.history.execute(
+        `Update entities lock to true, C1 position`,
+        new LockC1(affected[0], affected[1]),
+        0 // Disable merge //// what?
+      );
     }
-    app.history.execute(
-      `Update entities lock to true, C1 position`,
-      new LockC1(...affected),
-      0 // Disable merge //// what?
-    );
+    if (affected[1] instanceof Path && affected[0] instanceof Segment) {
+      app.history.execute(
+        `Update entities lock to true, C1 position`,
+        new LockC1(affected[1], affected[0]),
+        0 // Disable merge //// what?
+      );
+    }
   }
 
   function onC2LockClick(event: React.MouseEvent<SVGSVGElement, MouseEvent>) {
@@ -365,19 +373,25 @@ const TreeItem = observer((props: TreeItemProps) => {
     if (affected.length !== 2) return;
     if (
       !(
-        (typeof affected[0] === "Path" && typeof affected[1] === "Segment") ||
-        (typeof affected[1] === "Path" && typeof affected[0] === "Segment")
+        (affected[0] instanceof Path && affected[1] instanceof Segment) ||
+        (affected[1] instanceof Path && affected[0] instanceof Segment)
       )
     )
       return;
-    if (typeof affected[0] === "Segment") {
-      affected = [affected[1], affected[0]];
+    if (affected[0] instanceof Path && affected[1] instanceof Segment) {
+      app.history.execute(
+        `Update entities lock to true, C1 position`,
+        new LockC2(affected[0], affected[1]),
+        0 // Disable merge //// what?
+      );
     }
-    app.history.execute(
-      `Update entities lock to true, C2 position`,
-      new LockC2(...affected),
-      0 // Disable merge //// what?
-    );
+    if (affected[1] instanceof Path && affected[0] instanceof Segment) {
+      app.history.execute(
+        `Update entities lock to true, C1 position`,
+        new LockC2(affected[1], affected[0]),
+        0 // Disable merge //// what?
+      );
+    }
   }
 
   function onDeleteClick(event: React.MouseEvent<SVGSVGElement, MouseEvent>) {
@@ -466,11 +480,11 @@ const TreeItem = observer((props: TreeItemProps) => {
               {isDraggable && <DeleteIcon className="PathTreePanel-TreeFuncIcon" onClick={action(onDeleteClick)} />}
               <LooksOneIcon
                 className="PathTreePanel-TreeFuncIcon PathTreePanel-TreeFuncIcon_show"
-                onClick={action(onLockC1)}
+                onClick={action(onC1LockClick)}
               />
               <LooksTwoIcon
                 className="PathTreePanel-TreeFuncIcon PathTreePanel-TreeFuncIcon_show"
-                onClick={action(onLockC2)}
+                onClick={action(onC2LockClick)}
               />
               {entity.lock === false ? (
                 parent?.lock === true ? (

@@ -57,7 +57,9 @@ function fixControlTooCloseToTheEndControl() {
   }
 
   fix(segment.controls[1], segment.controls[0]);
-  fix(segment.controls[segment.controls.length - 2] as Control, segment.controls[segment.controls.length - 1]);
+  const pn2 = segment.controls[segment.controls.length - 2];
+  const pn1 = segment.controls[segment.controls.length - 1];
+  fix(new Control(pn2.x, pn2.y), new EndControl(pn1.x, pn1.y, pn1 instanceof EndControl ? pn1.heading : 0));
 }
 
 const FieldTooltipContent = observer((props: {}) => {
