@@ -4,6 +4,8 @@ import DeleteIcon from "@mui/icons-material/Delete";
 import FiberManualRecordOutlinedIcon from "@mui/icons-material/FiberManualRecordOutlined";
 import LockOpenIcon from "@mui/icons-material/LockOpen";
 import LockOutlinedIcon from "@mui/icons-material/LockOutlined";
+import LooksOneIcon from "@mui/icons-material/LooksOne"
+import LooksTwoIcon from "@mui/icons-material/LooksTwo"
 import VisibilityIcon from "@mui/icons-material/Visibility";
 import VisibilityOffOutlinedIcon from "@mui/icons-material/VisibilityOffOutlined";
 import AddIcon from "@mui/icons-material/Add";
@@ -454,7 +456,7 @@ const TreeItem = observer((props: TreeItemProps) => {
                 parent?.lock === true ? (
                   <FiberManualRecordOutlinedIcon
                     className="PathTreePanel-TreeFuncIcon PathTreePanel-TreeFuncIcon_show"
-                    onClick={action(onLockClick)} //// this is where it locks, I think? need to extend to C1 and C2
+                    onClick={action(onLockClick)} //// this is the circle icon that appears on points when their segment is locked
                   />
                 ) : (
                   <LockOpenIcon className="PathTreePanel-TreeFuncIcon" onClick={action(onLockClick)} />
@@ -465,6 +467,16 @@ const TreeItem = observer((props: TreeItemProps) => {
                   onClick={action(onLockClick)}
                 />
               )}
+              {
+                <LooksOneIcon
+                  className="PathTreePanel-TreeFuncIcon PathTreePanel-TreeFuncIcon_show"
+                  onClick={action(onLockC1)}
+                />
+                <LooksTwoIcon
+                  className="PathTreePanel-TreeFuncIcon PathTreePanel-TreeFuncIcon_show"
+                  onClick={action(onLockC2)}
+                />
+              }
               {entity.visible === true ? (
                 parent?.visible === false ? (
                   <FiberManualRecordOutlinedIcon
