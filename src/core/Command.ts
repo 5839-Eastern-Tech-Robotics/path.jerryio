@@ -746,12 +746,21 @@ export class ConvertSegment implements CancellableCommand, AddPathTreeItemsComma
 
 export class LockC1 implements CancellableCommand {
   //// my C1 continuity locker
+  public segment: Segment;
   public variant: SegmentVariant;
   public last: Segment;
   protected previousControls: [SegmentControls, SegmentControls] | undefined;
   protected newControls: [SegmentControls, SegmentControls] | undefined;
 
-  constructor(public path: Path, public segment: Segment) {
+  constructor(public path: Path, public knot: EndControl) {
+    let detected = False;
+    for (let i=1; i<Path.segments.length; i++) {
+      if (i.controls[0] != knot) continue;
+      detected = True;
+      segment = Path.segments[i];
+    }
+    if (!detected) return;
+    
     this.variant = segment.isQuintic()
       ? SegmentVariant.Quintic
       : segment.isCubic()
@@ -805,7 +814,15 @@ export class LockC2 implements CancellableCommand {
   protected previousControls: [SegmentControls, SegmentControls] | undefined;
   protected newControls: [SegmentControls, SegmentControls] | undefined;
 
-  constructor(public path: Path, public segment: Segment) {
+  constructor(public path: Path, public knot: EndControl) {
+    let detected = False;
+    for (let i=1; i<Path.segments.length; i++) {
+      if (i.controls[0] != knot) continue;
+      detected = True;
+      segment = Path.segments[i];
+    }
+    if (!detected) return;
+    
     this.variant = segment.isQuintic()
       ? SegmentVariant.Quintic
       : segment.isCubic()
