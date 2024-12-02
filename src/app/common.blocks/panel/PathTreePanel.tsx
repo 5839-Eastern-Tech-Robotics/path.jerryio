@@ -347,19 +347,19 @@ const TreeItem = observer((props: TreeItemProps) => {
     if (affected.length !== 2) return;
     if (
       !(
-        (affected[0] instanceof Path && affected[1] instanceof Segment) ||
-        (affected[1] instanceof Path && affected[0] instanceof Segment)
+        (affected[0] instanceof Path && affected[1] instanceof EndControl) ||
+        (affected[1] instanceof Path && affected[0] instanceof EndControl)
       )
     )
       return;
-    if (affected[0] instanceof Path && affected[1] instanceof Segment) {
+    if (affected[0] instanceof Path && affected[1] instanceof EndControl) {
       app.history.execute(
         `Update entities lock to true, C1 position`,
         new LockC1(affected[0], affected[1]),
         0 // Disable merge //// what?
       );
     }
-    if (affected[1] instanceof Path && affected[0] instanceof Segment) {
+    if (affected[1] instanceof Path && affected[0] instanceof EndControl) {
       app.history.execute(
         `Update entities lock to true, C1 position`,
         new LockC1(affected[1], affected[0]),
@@ -373,19 +373,19 @@ const TreeItem = observer((props: TreeItemProps) => {
     if (affected.length !== 2) return;
     if (
       !(
-        (affected[0] instanceof Path && affected[1] instanceof Segment) ||
-        (affected[1] instanceof Path && affected[0] instanceof Segment)
+        (affected[0] instanceof Path && affected[1] instanceof EndControl) ||
+        (affected[1] instanceof Path && affected[0] instanceof EndControl)
       )
     )
       return;
-    if (affected[0] instanceof Path && affected[1] instanceof Segment) {
+    if (affected[0] instanceof Path && affected[1] instanceof EndControl) {
       app.history.execute(
         `Update entities lock to true, C1 position`,
         new LockC2(affected[0], affected[1]),
         0 // Disable merge //// what?
       );
     }
-    if (affected[1] instanceof Path && affected[0] instanceof Segment) {
+    if (affected[1] instanceof Path && affected[0] instanceof EndControl) {
       app.history.execute(
         `Update entities lock to true, C1 position`,
         new LockC2(affected[1], affected[0]),
