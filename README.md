@@ -1,8 +1,8 @@
 # Changes (in progress)
 
-- ~~quintic bezier spline~~ DONE! on previous commit
+- ~~quintic bezier spline~~ DONE!
 - snapping for C1 and C2 continuity
-- UI for quintic control points
+- ~~UI for quintic control points~~ DONE!
 
 # Original README
 

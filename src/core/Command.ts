@@ -753,22 +753,22 @@ export class LockC1 implements CancellableCommand {
   protected newControls: [SegmentControls, SegmentControls] | undefined;
 
   constructor(public path: Path, public knot: EndControl) {
-    let detected = False;
-    for (let i=1; i<Path.segments.length; i++) {
-      if (i.controls[0] != knot) continue;
-      detected = True;
-      segment = Path.segments[i];
+    this.segment = new Segment();
+    let detected = false;
+    for (let i = 1; i < path.segments.length; i++) {
+      if (path.segments[i].controls[0] !== knot) continue;
+      detected = true;
+      this.segment = path.segments[i];
     }
-    if (!detected) return;
-    
-    this.variant = segment.isQuintic()
+    this.variant = this.segment.isQuintic()
       ? SegmentVariant.Quintic
-      : segment.isCubic()
+      : this.segment.isCubic()
       ? SegmentVariant.Cubic
-      : segment.isLinear()
+      : this.segment.isLinear()
       ? SegmentVariant.Linear
       : SegmentVariant.Quintic;
     this.last = this.path.segments[this.path.segments.indexOf(this.segment) - 1];
+    if (!detected) return;
   }
 
   execute(): void {
@@ -809,28 +809,29 @@ export class LockC1 implements CancellableCommand {
 
 export class LockC2 implements CancellableCommand {
   //// my C2 continuity locker
+  public segment: Segment;
   public variant: SegmentVariant;
   public last: Segment;
   protected previousControls: [SegmentControls, SegmentControls] | undefined;
   protected newControls: [SegmentControls, SegmentControls] | undefined;
 
   constructor(public path: Path, public knot: EndControl) {
-    let detected = False;
-    for (let i=1; i<Path.segments.length; i++) {
-      if (i.controls[0] != knot) continue;
-      detected = True;
-      segment = Path.segments[i];
+    this.segment = new Segment();
+    let detected = false;
+    for (let i = 1; i < path.segments.length; i++) {
+      if (path.segments[i].controls[0] !== knot) continue;
+      detected = true;
+      this.segment = path.segments[i];
     }
-    if (!detected) return;
-    
-    this.variant = segment.isQuintic()
+    this.variant = this.segment.isQuintic()
       ? SegmentVariant.Quintic
-      : segment.isCubic()
+      : this.segment.isCubic()
       ? SegmentVariant.Cubic
-      : segment.isLinear()
+      : this.segment.isLinear()
       ? SegmentVariant.Linear
       : SegmentVariant.Quintic;
     this.last = this.path.segments[this.path.segments.indexOf(this.segment) - 1];
+    if (!detected) return;
   }
 
   execute(): void {
