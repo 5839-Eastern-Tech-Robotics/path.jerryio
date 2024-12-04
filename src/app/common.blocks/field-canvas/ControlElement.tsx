@@ -94,10 +94,14 @@ function getSiblingControls(path: Path, target: EndControl): Control[] {
 
   const prev: AnyControl | undefined = controls[idx - 1];
   const next: AnyControl | undefined = controls[idx + 1];
+  const prev2: AnyControl | undefined = controls[idx - 2];
+  const next2: AnyControl | undefined = controls[idx + 2];
 
   const siblingControls: Control[] = [];
   if (prev instanceof Control) siblingControls.push(prev);
   if (next instanceof Control) siblingControls.push(next);
+  if (prev instanceof Control) siblingControls.push(prev2);
+  if (next instanceof Control) siblingControls.push(next2);
 
   return siblingControls;
 }
